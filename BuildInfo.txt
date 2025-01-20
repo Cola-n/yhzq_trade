@@ -1,0 +1,8 @@
+构建时间: 20230208094459
+    PLATEFORM: gcc-4.8.5
+    CPU: x64
+    TYPE: Release
+    OS: rhel
+    PROTOCOL: tcp
+    OS_VERSION: Redhat7.4
+    GCC_VERSION: gcc-4.8.5

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<api>
+    <user></user><!--登录AGW的账户--> 
+    <password></password><!--登录AGW的密码--> 
+    <locations></locations><!--IP地址 格式为："ip:port;ip:port"-->
+</api>
