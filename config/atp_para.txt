@@ -1,0 +1,81 @@
+# 1.终端识别码
+# 终端识别码，由券商指定规则
+terminal_feature_code = PC;IIP=119.36.8.132;IPORT=50031;LIP=192.168.1.62;MAC=FCF8GR5C34;HD=TU366AY91GER;PCN=ADMIN1;CPU=432eh12fe21ge1f;PI=NA;VOL=NA@atp_demo;V3.2.3.13
+
+# 2.初始化api
+站点信息，该字段已经不使用
+station_name =
+
+# 配置文件路径
+cfg_path=.
+
+# 日志路径
+log_dir_path =../log/ 
+
+# 是否记录所有委托信息  1或者true表示是  0或者false表示否
+record_all_flag = true
+
+# 是否启用会话保持 1或者true表示是  0或者false表示否
+connection_retention_flag = false
+
+
+# 3.加密库及公钥配置
+# 对接兴业ATP柜台时，必须及时配置加密库及兴业ATP专用的公私钥文件
+
+# 是否对消息中的password加密
+ENCRYPT_SCHEMA=1
+
+# 登入及密码修改消息中密码字段的加密算法so路径
+ATP_LOGIN_ENCRYPT_PASSWORD=../lib/librsa_2048_encrypt.so
+
+# 除登入及密码修改外其他消息的密码字段加密算法
+ATP_ENCRYPT_PASSWORD=../lib/librsa_2048_encrypt.so
+
+# 如果采用国密算法，通过该key配置 GM算法配置加密使用的公钥路径
+GM_SM2_PUBLIC_KEY_PATH=
+
+# 如果使用rsa算法加密，通过该key配置 rsa算法配置加密使用的公钥路径
+RSA_PUBLIC_KEY_PATH = ../lib/rsa_public_key.pem
+
+
+# 4.连接信息
+# 网关用户名
+user=SZTHR_JR1
+user=zhongtianprod01
+user=zhongtianprod02           
+user=zhongtianprod03
+# 网关用户密码
+connect_password=SZTHR#JR1
+connect_password=zhongT01@601377
+connect_password=zhongT02@601377      
+connect_password=zhongT03@601377
+
+# 网关主备节点的地址+端口 多个地址时多写几项即可，两个地址即主备地址
+locations=223.70.124.229:32001
+locations=223.70.124.229:32001
+# locations=10.72.9.11:32001
+# locations=10.72.9.13:32001
+# 发送心跳的时间间隔，单位：毫秒
+heartbeat_interval_milli=5000
+# 连接超时时间，单位：毫秒
+connect_timeout_milli = 5000
+# 重试连接次数
+reconnect_time = 10
+# 客户端程序名字
+client_name = zhongtian_yhzq_atp
+# 客户端程序版本
+client_version = V1.0.0
+# 模式0-同步回报模式，模式1-快速登录模式，不同步回报
+mode = 0
+
+# 5.登录信息
+# 登录模式  1表示客户号登录模式 2表示资金账户登录模式 3表示证券账户登录模式
+login_mode = 2
+# 委托方式  0表示自助委托
+order_way = d
+
+# 6.风控信息
+max_order_qty = 20000
+max_order_qty_sec = 300
+cancel_pro = 0.3
+scrap_pro = 0.5

@@ -6,5 +6,5 @@
 #include <trade/atp_trade_msg.h>
 #include <trade/atp_trade_handler.h>
 #include <trade/atp_trade_client.h>
-
+#include <trade_twap.h>
 #endif

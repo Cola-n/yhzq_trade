@@ -1,0 +1,23 @@
+# twap para
+is_start=1
+project_dir=../../products/
+
+# 产品名字与产品账户，交易密码，上海账户，深圳账户
+fund_paras=YL17:10420014598,147009860283,B881159262,0800046928
+
+
+fund_list=YL17
+
+agw_list=YL17
+
+trade_days_path=/root/niqin_144/yhzq_trade/doc/tradeDays_utf8.txt
+twap_num=6
+
+twap_trade_start_time=093000
+twap_trade_end_time=150000
+judge_end_time=144000
+
+twap_trade_times=093000,101000,105000,133000,140000,143000
+real_time_trade_times=101000,110000,140000,143000
+
+wait_seconds=8
