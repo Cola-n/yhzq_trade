@@ -436,7 +436,7 @@ std::string get_project_path()
         key = line.substr(0, pos);
         value = line.substr(pos + 1);
 
-        std::cout<<key<<value<<std::endl;
+        // std::cout<<key<<value<<std::endl;
 
         // 根据键赋值给结构体字段
         if (key == "project_dir")

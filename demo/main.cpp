@@ -737,7 +737,8 @@ ATPRetCodeType send_order(ATPTradeAPI *client, int market, std::string stock_cod
         }
         // std::cout << p->security_id << " " << p->price << std::endl;
     }
-    else
+    // 市价报卖单时用跌停价
+    else if (order_way == 13 && direction == 2)
     {
         std::string order_code = stock_code.substr(1, 6);
         if (TradeTwapPointer->limit_price_map.count(stock_code) != 0)
@@ -753,6 +754,12 @@ ATPRetCodeType send_order(ATPTradeAPI *client, int market, std::string stock_cod
             std::cout << "order_code=" << order_code << " not in buy_limit_price_map" << std::endl;
             p->price = 0.1 * 10000;
         }
+    }
+    // 限价报单
+    else
+    {
+        double multiplied = order_price * 10000;
+        p->price = static_cast<int>(std::round(multiplied / 100) * 100); // 委托价格 N13(4)，21.0000元
     }
 
     p->order_qty = abs(order_quantity) * 100; // 申报数量N15(2)；股票为股、基金为份、上海债券默认为张（使用时请务必与券商确认），其他为张；1000.00股
@@ -785,12 +792,12 @@ ATPRetCodeType send_order(ATPTradeAPI *client, int market, std::string stock_cod
     p->client_seq_id = g_client_seq_id++; // 用户系统消息序号
 
     // 打印订单信息
-    // std::cout << "_security_id: " << p->security_id << std::endl;
+    std::cout << "security_id: " << p->security_id << std::endl;
     // std::cout << "market_id: " << p->market_id << std::endl;
     // std::cout << "side: " << p->side << std::endl;
     // std::cout << "order_type: " << p->order_type << std::endl;
-    // std::cout << "price: " << p->price << std::endl;
-    // std::cout << "order_qty: " << p->order_qty << std::endl;
+    std::cout << "price: " << p->price << std::endl;
+    std::cout << "order_qty: " << p->order_qty << std::endl;
     // std::cout << "cust_id: " << p->cust_id << std::endl;
     // std::cout << "fund_account_id: " << p->fund_account_id << std::endl;
     // std::cout << "account_id: " << p->account_id << std::endl;
@@ -800,44 +807,44 @@ ATPRetCodeType send_order(ATPTradeAPI *client, int market, std::string stock_cod
     // std::cout << "client_seq_id: " << p->client_seq_id << std::endl;
 
     // 调用下单函数
-    ATPRetCodeType ec = client->ReqCashAuctionOrder(p);
+    // ATPRetCodeType ec = client->ReqCashAuctionOrder(p);
 
-    TradeTwapPointer->send_times++;
-    if (TradeTwapPointer->send_times >= atp_paras.max_order_qty_sec)
-    {
-        std::cout << "The number of orders placed per second has exceeded the maximum limit" << std::endl;
-        std::cout << "We will wait for 3 seconds to continue placing orders" << std::endl;
-        sleep(3);
-        TradeTwapPointer->send_times = 0;
-    }
+    // TradeTwapPointer->send_times++;
+    // if (TradeTwapPointer->send_times >= atp_paras.max_order_qty_sec)
+    // {
+    //     std::cout << "The number of orders placed per second has exceeded the maximum limit" << std::endl;
+    //     std::cout << "We will wait for 3 seconds to continue placing orders" << std::endl;
+    //     sleep(3);
+    //     TradeTwapPointer->send_times = 0;
+    // }
 
-    TradeTwapPointer->total_send_times++;
-    if (TradeTwapPointer->total_send_times >= atp_paras.max_order_qty)
-    {
-        std::cout << " The number of orders placed today has reached the top, and orders have now been stopped " << std::endl;
-        std::cin.clear();
-        int flag;
-        std::cin >> flag;
-    }
+    // TradeTwapPointer->total_send_times++;
+    // if (TradeTwapPointer->total_send_times >= atp_paras.max_order_qty)
+    // {
+    //     std::cout << " The number of orders placed today has reached the top, and orders have now been stopped " << std::endl;
+    //     std::cin.clear();
+    //     int flag;
+    //     std::cin >> flag;
+    // }
 
-    if (TradeTwapPointer->cancel_order / TradeTwapPointer->total_send_times >= atp_paras.cancel_pro)
-    {
-        std::cout << " The number of cancallation rate today has reached the top, and orders have now been stopped " << std::endl;
-        std::cin.clear();
-        int flag;
-        std::cin >> flag;
-    }
+    // if (TradeTwapPointer->cancel_order / TradeTwapPointer->total_send_times >= atp_paras.cancel_pro)
+    // {
+    //     std::cout << " The number of cancallation rate today has reached the top, and orders have now been stopped " << std::endl;
+    //     std::cin.clear();
+    //     int flag;
+    //     std::cin >> flag;
+    // }
 
-    if (TradeTwapPointer->scrap_order / TradeTwapPointer->total_send_times >= atp_paras.scrap_pro)
-    {
-        std::cout << " The number of scrap rate today has reached the top, and orders have now been stopped " << std::endl;
-        std::cin.clear();
-        int flag;
-        std::cin >> flag;
-    }
+    // if (TradeTwapPointer->scrap_order / TradeTwapPointer->total_send_times >= atp_paras.scrap_pro)
+    // {
+    //     std::cout << " The number of scrap rate today has reached the top, and orders have now been stopped " << std::endl;
+    //     std::cin.clear();
+    //     int flag;
+    //     std::cin >> flag;
+    // }
 
-    delete p;
-    return ec;
+    // delete p;
+    // return ec;
 }
 
 // 初始化连接并完成登录
@@ -1197,8 +1204,6 @@ ATPRetCodeType cancelOrder(ATPTradeAPI *client, std::string orig_cl_ord_no)
 
 int main(int argc, char *argv[])
 {
-
-    
     // 读取配置信息
     std::string twap_para_path = "../config/twap_para.txt";
     if (!isExistFile(twap_para_path))
@@ -1286,35 +1291,22 @@ int main(int argc, char *argv[])
     client = new ATPTradeAPI();
     handler = new CustHandler();
 
-    if (init(client, handler))
-    {
-        // send(client, "601988", 4.59, 100, 1);
-        // std::cout << "connect and login success" << std::endl;
-        // std::cout << "==============================" << std::endl;
-        // // 开启获取行情数据线程
-        // std::string inputline1;
-        // inputline1 = "y";
-        // if (inputline1 == "y")
-        // {
-        //     std::thread GetMarketDataTrd(GetMarketDataFunc);
-        //     GetMarketDataTrd.detach();
-        // }
-        // std::cout << "after thread get_market_data, sleep(5)" << std::endl;
-        // sleep(10);
 
-        // 开启交易线程
-        query_money_atp();
-        sleep(2);
-        std::string inputline3;
-        inputline3 = "y";
-        if (inputline3 == "y")
+    if (true){
+        std::cout << "connect and login success" << std::endl;
+        std::cout << "==============================" << std::endl;
+        // 开启获取行情数据线程
+        std::string inputline1;
+        inputline1 = "y";
+        if (inputline1 == "y")
         {
-            std::thread StrategyTrd(TwapTradeFunc);
-            StrategyTrd.detach();
+            std::thread GetMarketDataTrd(GetMarketDataFunc);
+            GetMarketDataTrd.detach();
         }
+        std::cout << "after thread get_market_data, sleep(5)" << std::endl;
+        sleep(10);
 
         // 开启监控线程
-        sleep(2);
         std::string inputline2;
         inputline2 = "y";
         if (inputline2 == "y")
@@ -1323,11 +1315,49 @@ int main(int argc, char *argv[])
             InspectTrd.detach();
         }
     }
-    else
-    {
-        std::cout << "connect and login failed" << std::endl;
-        TradeTwapPointer->is_quit = 1;
-    }
+    
+    // if (init(client, handler))
+    // {
+    //     // send(client, "601988", 4.59, 100, 1);
+    //     // std::cout << "connect and login success" << std::endl;
+    //     // std::cout << "==============================" << std::endl;
+    //     // // 开启获取行情数据线程
+    //     // std::string inputline1;
+    //     // inputline1 = "y";
+    //     // if (inputline1 == "y")
+    //     // {
+    //     //     std::thread GetMarketDataTrd(GetMarketDataFunc);
+    //     //     GetMarketDataTrd.detach();
+    //     // }
+    //     // std::cout << "after thread get_market_data, sleep(5)" << std::endl;
+    //     // sleep(10);
+
+    //     // 开启交易线程
+    //     // query_money_atp();
+    //     // sleep(2);
+    //     // std::string inputline3;
+    //     // inputline3 = "y";
+    //     // if (inputline3 == "y")
+    //     // {
+    //     //     std::thread StrategyTrd(TwapTradeFunc);
+    //     //     StrategyTrd.detach();
+    //     // }
+
+    //     // 开启监控线程
+    //     // sleep(2);
+    //     // std::string inputline2;
+    //     // inputline2 = "y";
+    //     // if (inputline2 == "y")
+    //     // {
+    //     //     std::thread InspectTrd(InspectFunc);
+    //     //     InspectTrd.detach();
+    //     // }
+    // }
+    // else
+    // {
+    //     std::cout << "connect and login failed" << std::endl;
+    //     TradeTwapPointer->is_quit = 1;
+    // }
     // 循环等待退出程序
     while (TradeTwapPointer->is_quit != 1)
     {

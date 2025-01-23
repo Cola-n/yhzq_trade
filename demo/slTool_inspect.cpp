@@ -65,9 +65,6 @@ void TradeTwapClass::StartInspect()
     }
     // std::cout << get_now_time()<<std::endl;
     auto timePoint1 = parseTime(get_now_time()); // 涨停时间
-    // while (code_info_vec_ptr.size() != sell_map.size()){
-    //     sleep(1);
-    // }
 
     // 检查是否开盘涨停, 统计剩余订单数量，开板后统一报单
     if (isBefore(15, 30, 0))
@@ -89,9 +86,9 @@ void TradeTwapClass::StartInspect()
                 continue;
             }
 
-            if (code_info.real_price >= code_info.riseup_price && code_info.bid_one_price >= code_info.riseup_price && code_info.riseup_price > 0)
+            if (code_info.real_price >= code_info.riseup_price && code_info.bid_one_price >= code_info.riseup_price && code_info.riseup_price > 0 && code_info.real_price > 0)
             {
-                // std::cout <<"real:" <<code_info.real_price<<"  rise:"<<code_info.riseup_price<<std::endl;
+                std::cout << "real:" << code_info.real_price << "  rise:" << code_info.riseup_price << "   ";
                 std::cout << key << " rise top when open, now change rest orders to zero..." << std::endl;
                 value.is_open_limit_up = 1;
                 // 修改卖单中数量为0
@@ -113,14 +110,17 @@ void TradeTwapClass::StartInspect()
         }
     }
 
-    // std::cout << "inspect begin......" << std::endl;
-    // std::cout << "=================================" << std::endl;
+    std::cout << "inspect begin......" << std::endl;
+    std::cout << "=================================" << std::endl;
+    std::cout << sell_map.size() << std::endl;
     while (isBefore(15, 57, 0) && !sell_map.empty())
     {
+        // std::cout << "inspecting......" << std::endl;
         for (std::map<std::string, SellInfo>::iterator it = sell_map.begin(); it != sell_map.end(); ++it)
         {
             std::string key = it->first;
             SellInfo value = it->second;
+
             // 监控未一字涨停股票是否盘中涨停, 修改、统计剩余委托量
             if (value.is_open_limit_up == 0 && value.is_deal_done == 0 && value.is_middle_limit_up == 0)
             {
@@ -140,9 +140,9 @@ void TradeTwapClass::StartInspect()
                 {
                     continue;
                 }
-                // std::cout << key << std::endl;
+
                 code_info = code_info_vec_ptr.at(key);
-                if (code_info.real_price >= code_info.riseup_price && code_info.riseup_price > 0)
+                if (code_info.real_price >= code_info.riseup_price && code_info.riseup_price > 0 && code_info.real_price > 0)
                 {
                     std::cout << "real:" << code_info.real_price << "  rise:" << code_info.riseup_price << "    ";
                     std::cout << key << " rise top when middle, now change rest orders to zero..." << std::endl;
@@ -181,6 +181,8 @@ void TradeTwapClass::StartInspect()
                 if (code_info.bid_one <= 1000000)
                 {
                     std::cout << key << " Stock opens 1,  now all sold ... " << code_info.bid_one << std::endl;
+                    // if (value.total_sell_quantity == 0)
+                    // {
                     OrderReqField order;
                     order.stock_code = key.substr(0, 6);
                     order.order_quantity = value.total_sell_quantity;
@@ -199,10 +201,10 @@ void TradeTwapClass::StartInspect()
                     printOrderReq(order);
                     std::cout << get_current_time_ms() << std::endl;
                     order_insert(order);
-
                     std::vector<struct OrderReqField> open_sell_array;
                     open_sell_array.push_back(order);
                     update_target_holding_map(open_sell_array);
+                    // }
                     it->second.is_deal_done = 1;
                 }
             }
@@ -230,11 +232,13 @@ void TradeTwapClass::StartInspect()
                 if (duration.count() < 60)
                 {
                     // 股票仅短暂涨停，触发后立刻卖出剩余数量
-                    // std::cout <<"real:" <<code_info.real_price<<"  rise:"<<code_info.riseup_price<<"    ";
-                    if (code_info.real_price < code_info.riseup_price)
+                    if (code_info.real_price < code_info.riseup_price && code_info.real_price > 0)
                     {
+                        std::cout << "real:" << code_info.real_price << "  rise:" << code_info.riseup_price << "    ";
                         std::cout << key << " Stock opens 2, now all sold ... " << code_info.bid_one << std::endl;
                         // 下单剩余数量
+                        // if (value.total_sell_quantity > 0)
+                        // {
                         OrderReqField order;
                         order.stock_code = key.substr(0, 6);
                         order.order_quantity = value.total_sell_quantity;
@@ -250,22 +254,25 @@ void TradeTwapClass::StartInspect()
                         order.order_way = 1;
                         order.order_price = code_info.real_price * 0.99;
                         // order.order_price = code_info.real_price;
-                        // printOrderReq(order);
-                        std::cout << get_current_time_ms() << std::endl;
+                        printOrderReq(order);
+                        // std::cout << get_current_time_ms() << std::endl;
                         order_insert(order);
                         std::vector<struct OrderReqField> open_sell_array;
                         open_sell_array.push_back(order);
                         update_target_holding_map(open_sell_array);
+                        // }
                         it->second.is_deal_done = 1;
                     }
                 }
                 else
                 {
                     // 涨停时间超过1分钟， 正式监控买一档委托量
-                    if (code_info.bid_one <= 1000000 || code_info.real_price < code_info.riseup_price)
+                    if ((code_info.bid_one <= 1000000 || code_info.real_price < code_info.riseup_price) && code_info.real_price > 0)
                     {
                         std::cout << key << " Stock opens 3, now all sold ... " << code_info.bid_one << std::endl;
                         // 下单剩余数量
+                        // if (value.total_sell_quantity > 0)
+                        // {
                         OrderReqField order;
                         order.stock_code = key.substr(0, 6);
                         order.order_quantity = value.total_sell_quantity;
@@ -281,12 +288,13 @@ void TradeTwapClass::StartInspect()
                         order.order_way = 1;
                         order.order_price = code_info.real_price * 0.99;
                         // order.order_price = code_info.real_price;
-                        // printOrderReq(order);
+                        printOrderReq(order);
                         std::cout << get_current_time_ms() << std::endl;
                         order_insert(order);
                         std::vector<struct OrderReqField> open_sell_array;
                         open_sell_array.push_back(order);
                         update_target_holding_map(open_sell_array);
+                        // }
                         it->second.is_deal_done = 1;
                     }
                 }
@@ -625,8 +633,23 @@ void help()
         "set_symbol_switch <[1 or 0]>\n");
 }
 
+template <typename MapType>
+std::vector<typename MapType::key_type> extractKeys(const MapType &map)
+{
+    std::vector<typename MapType::key_type> keys;
+    for (const auto &pair : map)
+    {
+        std::string key = pair.first.substr(0, 6);
+        keys.push_back(key);
+    }
+    return keys;
+}
+
 void TradeTwapClass::get_market_data()
 {
+    // 初始化卖单
+    mapKeys = extractKeys(sell_map);
+
     char file[64] = INI_FILE_PATH;
     ini.Open(file);
 
@@ -657,7 +680,7 @@ void TradeTwapClass::get_market_data()
         }
     }
 
-    while (isBefore(15, 5, 0))
+    while (isBefore(15, 0, 0))
     {
         sleep(60);
     }
@@ -1272,6 +1295,8 @@ void sse_report::on_report_efh_sse_lev2_snap(session_identity id, sse_hpf_lev2 *
         // 行情筛选 是否存在今日卖单中
         if (std::find(mapKeys.begin(), mapKeys.end(), code.substr(0, 6)) == mapKeys.end())
         {
+            // std::string key = code.substr(0, 6);
+            // mapKeys.push_back(key);
             return;
         }
         // 原本数据
@@ -1285,9 +1310,16 @@ void sse_report::on_report_efh_sse_lev2_snap(session_identity id, sse_hpf_lev2 *
         orig_code_info.real_price = p_snap->m_last_price / 1000.0;
         orig_code_info.yes_close = p_snap->m_pre_close_price / 1000.0;
         orig_code_info.open_price = p_snap->m_open_price / 1000.0;
-        orig_code_info.bid_one_price =p_snap-> m_bid_unit[0].m_price / 1000.0;
-        orig_code_info.bid_one = p_snap-> m_bid_unit[0].m_quantity / 1000.0;
-        orig_code_info.bid_two = p_snap-> m_bid_unit[1].m_quantity / 1000.0;
+        orig_code_info.bid_one_price = p_snap->m_bid_unit[0].m_price / 1000.0;
+        orig_code_info.bid_one = p_snap->m_bid_unit[0].m_quantity / 1000.0;
+        orig_code_info.bid_two = p_snap->m_bid_unit[1].m_quantity / 1000.0;
+        // orig_code_info = code_info_vec_ptr[code];
+        // std::cout <<code<<"  "
+        //           << orig_code_info.real_price << "  "
+        //           << orig_code_info.riseup_price << "  "
+        //           << orig_code_info.bid_one << "  "
+        //           << orig_code_info.bid_two << std::endl;
+
         code_info_vec_ptr[code] = orig_code_info;
     }
 }
@@ -2280,7 +2312,7 @@ void sze_report::on_report_efh_sze_lev2_snap(session_identity id, sze_hpf_lev2 *
             // 处理错误，可能是日志记录或直接返回
             return;
         }
-        std::string code(reinterpret_cast<char*>(p_snap->m_head.m_symbol), 9);
+        std::string code(reinterpret_cast<char *>(p_snap->m_head.m_symbol), 6);
 
         // 行情筛选 是否存在今日卖单中
         if (std::find(mapKeys.begin(), mapKeys.end(), code.substr(0, 6)) == mapKeys.end())
@@ -2290,17 +2322,24 @@ void sze_report::on_report_efh_sze_lev2_snap(session_identity id, sze_hpf_lev2 *
         // 原本数据
         ut_code_Info orig_code_info;
         if (code_info_vec_ptr.find(code) == code_info_vec_ptr.end())
-        { 
+        {
             orig_code_info = code_info_vec_ptr[code];
         }
 
         orig_code_info.time = std::to_string(static_cast<int>(std::floor(p_snap->m_head.m_quote_update_time)));
-        orig_code_info.real_price = p_snap->m_last_price / 1000.0;
-        orig_code_info.yes_close = p_snap->m_pre_close_price / 1000.0;
-        orig_code_info.open_price = p_snap->m_open_price / 1000.0;
-        orig_code_info.bid_one_price =p_snap-> m_bid_unit[0].m_price / 1000.0;
-        orig_code_info.bid_one = p_snap-> m_bid_unit[0].m_quantity / 1000.0;
-        orig_code_info.bid_two = p_snap-> m_bid_unit[1].m_quantity / 1000.0;
+        orig_code_info.real_price = p_snap->m_last_price / 10000.0;
+        orig_code_info.yes_close = p_snap->m_pre_close_price / 10000.0;
+        orig_code_info.open_price = p_snap->m_open_price / 10000.0;
+        orig_code_info.bid_one_price = p_snap->m_bid_unit[0].m_price / 10000.0;
+        orig_code_info.bid_one = p_snap->m_bid_unit[0].m_quantity / 100.0;
+        orig_code_info.bid_two = p_snap->m_bid_unit[1].m_quantity / 100.0;
+
+        // std::cout <<code<<"  "
+        //           << orig_code_info.real_price << "  "
+        //           << orig_code_info.riseup_price << "  "
+        //           << orig_code_info.bid_one << "  "
+        //           << orig_code_info.bid_two << std::endl;
+
         code_info_vec_ptr[code] = orig_code_info;
     }
 }

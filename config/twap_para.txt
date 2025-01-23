@@ -10,7 +10,7 @@ fund_list=YL17
 
 agw_list=YL17
 
-trade_days_path=/root/niqin_144/yhzq_trade/doc/tradeDays_utf8.txt
+trade_days_path=/root/niqin/yhzq_trade/doc/tradeDays_utf8.txt
 twap_num=6
 
 twap_trade_start_time=093000

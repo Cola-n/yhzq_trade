@@ -669,7 +669,6 @@ TradeTwapClass::TradeTwapClass(twap_para twap_paras, std::string fund) : project
     time_t now = time(NULL);
     tm *ltm = localtime(&now);
     std::string str_full_dir = twap_paras.project_dir + "/data/" + today;
-    std::cout<<str_full_dir<<std::endl;
     create_directory(str_full_dir);
 
 }
@@ -1221,18 +1220,9 @@ void TradeTwapClass::init_sell_map()
                         code = token.substr(0, 6);
                 else if (i == 3)
                     sellInfo.total_sell_quantity = stringToInt(token);
-
                 i++;
             }
 
-            if (code.substr(0, 1) == "6")
-            {
-                code = code + ".SSE";
-            }
-            else
-            {
-                code = code + ".SZE";
-            }
             sellInfo.total_sell_quantity = 0;
 
             sell_map[code] = sellInfo;
